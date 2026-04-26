@@ -255,3 +255,128 @@ if search_query:
         st.error("Player not found.")
 else:
     ()
+
+st.divider()
+st.subheader("🏆 Scouting Leaderboard")
+
+# Run scoring model on filtered data
+invert_stats = ['Performance_Fls_p90', 'Performance_CrdY_p90']
+sim_cols = list(not_weights.keys())
+
+# Need at least some players to score
+if len(df_filtered) > 0:
+    scoring_df = df_filtered.copy()
+    # Normalize and score
+    scores = []
+    for stat, weight in not_weights.items():
+        min_val = scoring_df[stat].min()
+        max_val = scoring_df[stat].max()
+
+        if max_val == min_val:
+            normalized = pd.Series(0, index=scoring_df.index)
+        elif stat in invert_stats:
+            normalized = 1 - (scoring_df[stat] - min_val) / (max_val - min_val)
+        else:
+            normalized = (scoring_df[stat] - min_val) / (max_val - min_val)
+
+        scores.append(normalized * weight)
+
+    scoring_df['weighted_score'] = sum(scores)
+
+    # Cosine similarity against Casemiro
+    casemiro_row = df[df['player'] == 'Casemiro'].sort_values(
+        'season', ascending=False
+    ).iloc[0]
+
+    casemiro_vector = np.array([
+        float(str(casemiro_row[s]).replace(',', '.'))
+        for s in sim_cols
+    ]).reshape(1, -1)
+
+    player_vectors = scoring_df[sim_cols].fillna(0).values
+    similarity_scores = cosine_similarity(casemiro_vector, player_vectors)[0]
+    scoring_df['similarity'] = similarity_scores
+
+    # Normalize weighted score
+    score_min = scoring_df['weighted_score'].min()
+    score_max = scoring_df['weighted_score'].max()
+    if score_max > score_min:
+        scoring_df['score_norm'] = (
+                                           scoring_df['weighted_score'] - score_min
+                                   ) / (score_max - score_min)
+    else:
+        scoring_df['score_norm'] = 0
+
+    # Final combined score
+    scoring_df['final_score'] = (
+            scoring_df['score_norm'] * 0.6 +
+            scoring_df['similarity'] * 0.4
+    ).round(4)
+
+    # Build results table
+    results = scoring_df[[
+        'player', 'team', 'league', 'age_',
+        'weighted_score', 'similarity', 'final_score'
+    ]].sort_values('final_score', ascending=False).reset_index(drop=True)
+
+    results.index += 1
+    results.columns = [
+        'Player', 'Team', 'League', 'Age',
+        'Weighted Score', 'Similarity', 'Final Score'
+    ]
+
+    # Display top 20 table
+    st.dataframe(
+        results.head(20),
+        use_container_width=True,
+        height=400
+    )
+
+    # Bar chart
+    top15 = results.head(15).sort_values('Final Score', ascending=True)
+    top15['Label'] = top15['Player'] + ' (' + top15['Team'] + ')'
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+    colors = plt.cm.Greens([
+        0.4 + 0.6 * (x - top15['Final Score'].min()) /
+        (top15['Final Score'].max() - top15['Final Score'].min())
+        for x in top15['Final Score']
+    ])
+    ax.barh(top15['Label'], top15['Final Score'], color=colors)
+    ax.set_xlabel('Final Score')
+    ax.set_title('Top 15 Casemiro Replacements')
+    ax.set_xlim(
+        top15['Final Score'].min() - 0.01,
+        top15['Final Score'].max() + 0.01
+    )
+    plt.tight_layout()
+    st.pyplot(fig)
+
+    # Scatter plot — score vs similarity
+    st.subheader("📊 Score vs Similarity")
+    fig2, ax2 = plt.subplots(figsize=(10, 6))
+    ax2.scatter(
+        results['Weighted Score'],
+        results['Similarity'],
+        alpha=0.5,
+        color='steelblue'
+    )
+
+    # Label top 10
+    for _, row in results.head(10).iterrows():
+        ax2.annotate(
+            row['Player'],
+            (row['Weighted Score'], row['Similarity']),
+            fontsize=7,
+            xytext=(5, 5),
+            textcoords='offset points'
+        )
+
+    ax2.set_xlabel('Weighted Score')
+    ax2.set_ylabel('Similarity to Casemiro')
+    ax2.set_title('Score vs Casemiro Similarity')
+    plt.tight_layout()
+    st.pyplot(fig2)
+
+else:
+    st.warning("No players match your filters — try adjusting the sliders!")
