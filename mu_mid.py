@@ -235,75 +235,67 @@ with col_chart1:
 # ============================================================
 st.divider()
 st.subheader("🔴 Transfer Targets — Leaderboard 2: Best Fit for Man Utd (70% Weights + 30% Similarity)")
-st.caption("Weighted score based on Carrick's possession-based system requirements")
+st.write("Ranking players based on the **Stat Weights** you selected in the sidebar.")
 
-mu_weights = {
-    'Tackle_90'        : 4,
-    'Blk_90'           : 3,
-    'Ground_duel_90'   : 4.5,
-    'Interception_90'  : 4,
-    'Recovery_90'      : 5,
-    'KeyPass_90'       : 4,
-    'Aerial_90'        : 3,
-    'Possesion_lost_90': 1,
-    'Pass%'            : 4,
-    'Ball_Retention'   : 5,
-}
 
-mu_invert_stats = ['Possesion_lost_90']
+def calculate_mu_score(df, weights_dict):
+    score = pd.Series(0.0, index=df.index)
+    for stat, weight in weights_dict.items():
+        if stat in df.columns:
+            # Clean data and handle string/numeric conversion
+            col_data = pd.to_numeric(df[stat].astype(str).str.replace(',', '.'), errors='coerce').fillna(0)
+            stat_min = col_data.min()
+            stat_max = col_data.max()
+            if stat_max > stat_min:
+                normalized_stat = (col_data - stat_min) / (stat_max - stat_min)
+                score += (normalized_stat * weight)
+    return score
 
-# Make sure all mu_weight cols are numeric
-mu_cols = list(mu_weights.keys())
-scouts[mu_cols] = scouts[mu_cols].apply(pd.to_numeric, errors='coerce').fillna(0)
 
-mu_scores = []
-for stat, weight in mu_weights.items():
-    min_val = scouts[stat].min()
-    max_val = scouts[stat].max()
-    if max_val == min_val:
-        normalized = pd.Series(0, index=scouts.index)
-    elif stat in mu_invert_stats:
-        normalized = 1 - (scouts[stat] - min_val) / (max_val - min_val)
-    else:
-        normalized = (scouts[stat] - min_val) / (max_val - min_val)
-    mu_scores.append(normalized * weight)
+# 1. Calculate the raw weighted score from sliders
+scouts['mu_weighted_score'] = calculate_mu_score(scouts, not_weights)
 
-scouts['mu_weighted_score'] = sum(mu_scores)
+# 2. Normalize that score (0 to 1) so it can be blended with similarity
+w_min = scouts['mu_weighted_score'].min()
+w_max = scouts['mu_weighted_score'].max()
+scouts['mu_score_norm'] = (scouts['mu_weighted_score'] - w_min) / (w_max - w_min) if w_max > w_min else 0
 
-mu_score_min = scouts['mu_weighted_score'].min()
-mu_score_max = scouts['mu_weighted_score'].max()
-scouts['mu_score_norm'] = (scouts['mu_weighted_score'] - mu_score_min) / (mu_score_max - mu_score_min) \
-    if mu_score_max > mu_score_min else 0
-
+# 3. Apply the 70/30 Ratio Blend
+# (70% Weighted Score + 30% Similarity Score)
 scouts['mu_final_score'] = (
-    scouts['mu_score_norm'] * 0.7 + scouts['casemiro_similarity'] * 0.3
+        (scouts['mu_score_norm'] * 0.7) + (scouts['casemiro_similarity'] * 0.3)
 ).round(4)
 
-leaderboard_mu = scouts[['Player', 'Age', 'Comp', 'mu_weighted_score', 'casemiro_similarity', 'mu_final_score']]\
+# 4. Create the Leaderboard DataFrame
+leaderboard_mu = scouts[['Player', 'Age', 'Comp', 'mu_weighted_score', 'casemiro_similarity', 'mu_final_score']] \
     .sort_values('mu_final_score', ascending=False).reset_index(drop=True)
 leaderboard_mu.index += 1
 leaderboard_mu.columns = ['Player', 'Age', 'League', 'Weighted Score', 'Casemiro Similarity', 'Final Score']
 
+# 5. Display Table and Plotly Chart
 col_lb2, col_chart2 = st.columns([1, 1])
 
 with col_lb2:
-    st.dataframe(leaderboard_mu, use_container_width=True, height=350)
+    st.write("**Top 10 Rankings**")
+    st.dataframe(leaderboard_mu.head(10), use_container_width=True, height=385)
 
 with col_chart2:
-    mu_sorted = leaderboard_mu.sort_values('Final Score', ascending=True)
-    fig_mu, ax_mu = plt.subplots(figsize=(7, 5))
-    colors_mu = plt.cm.Reds([
-        0.4 + 0.6 * (x - mu_sorted['Final Score'].min()) /
-        (mu_sorted['Final Score'].max() - mu_sorted['Final Score'].min())
-        for x in mu_sorted['Final Score']
-    ])
-    ax_mu.barh(mu_sorted['Player'], mu_sorted['Final Score'], color=colors_mu)
-    ax_mu.set_xlabel('Final Score')
-    ax_mu.set_title('Best Fit for Man Utd — Transfer Targets')
-    ax_mu.set_xlim(mu_sorted['Final Score'].min() - 0.01,
-                   mu_sorted['Final Score'].max() + 0.01)
-    plt.tight_layout()
-    st.pyplot(fig_mu)
+    # Get top 10 for the chart and sort ascending for horizontal bar flow
+    mu_chart_data = leaderboard_mu.head(10).sort_values(by='Final Score', ascending=True)
+
+    fig_mu = px.bar(
+        mu_chart_data,
+        x='Final Score',
+        y='Player',
+        orientation='h',
+        title='Best Fit (70% Weights / 30% Similarity)',
+        labels={'Final Score': 'Blended Final Score', 'Player': ''},
+        color='Final Score',
+        color_continuous_scale='Reds',
+        template='plotly_white'
+    )
+    fig_mu.update_layout(showlegend=False, margin=dict(l=0, r=0, t=40, b=0))
+    st.plotly_chart(fig_mu, use_container_width=True)
 
 # ============================================================
 # SECTION 7 — SCATTER: Score vs Similarity (Transfer Targets)
