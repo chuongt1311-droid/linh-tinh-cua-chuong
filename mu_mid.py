@@ -303,25 +303,30 @@ with col_chart2:
 st.divider()
 st.subheader("📊 Transfer Targets — Score vs Similarity")
 
-fig_scatter, ax_scatter = plt.subplots(figsize=(10, 6))
-ax_scatter.scatter(
-    scouts['mu_weighted_score'],
-    scouts['casemiro_similarity'],
-    s=100, alpha=0.7, color='crimson', edgecolors='white', linewidths=0.5
+# 🛠️ FIX: Upgraded Scatter Plot to Plotly so you can hover over the dots!
+fig_scatter = px.scatter(
+    scouts,
+    x='mu_weighted_score',
+    y='casemiro_similarity',
+    hover_name='Player',
+    text='Player',
+    title='Transfer Targets: Fit vs Casemiro Similarity',
+    labels={
+        'mu_weighted_score': 'Man Utd Weighted Score',
+        'casemiro_similarity': 'Similarity to Casemiro'
+    }
 )
-for _, row in scouts.iterrows():
-    ax_scatter.annotate(
-        row['Player'],
-        (row['mu_weighted_score'], row['casemiro_similarity']),
-        fontsize=8, xytext=(6, 4), textcoords='offset points'
-    )
-ax_scatter.set_xlabel('Man Utd Weighted Score')
-ax_scatter.set_ylabel('Similarity to Casemiro')
-ax_scatter.set_title('Transfer Targets: Fit vs Casemiro Similarity')
-ax_scatter.axhline(y=scouts['casemiro_similarity'].mean(), color='gray',
-                   linestyle='--', linewidth=0.8, alpha=0.6)
-ax_scatter.axvline(x=scouts['mu_weighted_score'].mean(), color='gray',
-                   linestyle='--', linewidth=0.8, alpha=0.6)
-plt.tight_layout()
-st.pyplot(fig_scatter)
+
+# Add reference lines (Averages)
+fig_scatter.add_hline(y=scouts['casemiro_similarity'].mean(), line_dash="dash", line_color="gray",
+                      annotation_text="Avg Similarity")
+fig_scatter.add_vline(x=scouts['mu_weighted_score'].mean(), line_dash="dash", line_color="gray",
+                      annotation_text="Avg Score")
+
+# Make the dots look good
+fig_scatter.update_traces(textposition='top center', marker=dict(size=10, color='crimson', opacity=0.7))
+fig_scatter.update_layout(height=600)
+
+st.plotly_chart(fig_scatter, use_container_width=True)
+
 st.caption("Top right = high fit + high similarity to Casemiro — ideal targets")
