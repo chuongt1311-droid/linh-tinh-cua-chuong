@@ -183,6 +183,80 @@ if player_1 and player_2:
             value=f"{p1_val:.2f}",
             delta=f"{diff:.2f}"
         )
+# ============================================================
+# SECTION 4 — VISUAL COMPARISON (RADAR CHART)
+# ============================================================
+st.divider()
+st.write(f"### 📊 Performance Radar: {player_1} vs {player_2}")
+st.caption(f"Showing percentile rankings. The outer edge (100) represents the best in the scouting pool.")
+
+# 1. Define the stats for the radar
+radar_stats = list(weights_labels.keys())
+radar_labels = [
+    "Tackles", "Blocks", "Ground Duels", "Interceptions",
+    "Recoveries", "Key Passes", "Pass %", "Aerial Duels", "Retention"
+]
+
+# 2. Calculate Percentiles relative to the whole dataset
+# This turns raw numbers into a 0-100 score based on your CSV
+scouts_pct = scouts.copy()
+for stat in radar_stats:
+    # Handle cleaning just in case
+    scouts_pct[stat] = pd.to_numeric(scouts_pct[stat].astype(str).str.replace(',', '.'), errors='coerce').fillna(0)
+    # Rank them 0 to 100
+    scouts_pct[stat] = (scouts_pct[stat].rank(pct=True) * 100).round(1)
+
+# 3. Extract data for the two selected players
+p1_values = scouts_pct[scouts_pct['Player'] == player_1][radar_stats].values.flatten().tolist()
+p2_values = scouts_pct[scouts_pct['Player'] == player_2][radar_stats].values.flatten().tolist()
+
+# 4. "Close" the radar loop (Plotly needs the first value repeated at the end)
+p1_values += p1_values[:1]
+p2_values += p2_values[:1]
+radar_labels_closed = radar_labels + [radar_labels[0]]
+
+# 5. Create the Radar Chart
+fig_radar = go.Figure()
+
+# Selected Target (e.g., Wharton, Kone)
+fig_radar.add_trace(go.Scatterpolar(
+    r=p1_values,
+    theta=radar_labels_closed,
+    fill='toself',
+    name=player_1,
+    line_color='#DA291C', # MU Red
+    fillcolor='rgba(218, 41, 28, 0.3)',
+    hoverinfo='name+r'
+))
+
+# The Standard (Casemiro)
+fig_radar.add_trace(go.Scatterpolar(
+    r=p2_values,
+    theta=radar_labels_closed,
+    fill='toself',
+    name=player_2,
+    line_color='#FFD700', # Gold"
+    fillcolor='rgba(255, 215, 0, 0.4)',
+    hoverinfo='name+r'
+))
+
+fig_radar.update_layout(
+    polar=dict(
+        radialaxis=dict(
+            visible=True,
+            range=[0, 100],
+            tickfont=dict(size=10)
+        ),
+        angularaxis=dict(
+            tickfont=dict(size=12, color="white")
+        )
+    ),
+    showlegend=True,
+    height=500,
+    margin=dict(l=80, r=80, t=20, b=20)
+)
+
+st.plotly_chart(fig_radar, use_container_width=True)
 
 
 # ============================================================
