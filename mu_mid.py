@@ -22,7 +22,7 @@ st.subheader("WHO CAN REPLACE CASEMIRO? — Transfer Targets Analysis 2025-26(ba
 # ============================================================
 @st.cache_data
 def load_scouts():
-    scouts = pd.read_csv('D:\\Pybaseball\\mid_scouting.csv')
+    scouts = pd.read_csv('mid_scouting.csv')
 
     # Ball retention ratio
     scouts['Ball_Retention'] = (
