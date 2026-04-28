@@ -22,7 +22,7 @@ st.subheader("WHO CAN REPLACE CASEMIRO? — Transfer Targets Analysis 2025-26(ba
 # ============================================================
 @st.cache_data
 def load_scouts():
-    scouts = pd.read_csv('mid_scouting.csv')
+    scouts = pd.read_csv('D:\\Pybaseball\\mid_scouting.csv')
 
     # Ball retention ratio
     scouts['Ball_Retention'] = (
@@ -133,63 +133,157 @@ if player_1 and player_2:
             c4.metric("G+A",
                       int(pd.to_numeric(p2_data.get('Gls', 0), errors='coerce') + pd.to_numeric(p2_data.get('Ast', 0),
                                                                                                 errors='coerce')))
+# ============================================================
+# SECTION 4.5 — PLAYER CHARACTERISTICS (WHOSCORED STYLE)
+# ============================================================
+st.divider()
+st.subheader(f"📋 Scout's Assessment: {player_1}")
+st.caption("Qualitative breakdown based on performance metrics.")
 
-    st.divider()
+# --- Mock Data Dictionary ---
+# In the future, you can pull these strings directly from your CSV if you add them!
+# For now, we use a dictionary to simulate the assessment.
+scout_assessments = {
+    "Casemiro": {
+        "Strengths": [("Aerial Duels", "Strong"), ("Blocking the ball", "Strong"), ("Tackling", "Strong")],
+        "Weaknesses": [("Discipline", "Weak"), ("Concentration", "Weak")],
+        "Style": ["Plays the ball off the ground often", "Indirect set-piece threat", "Commits fouls often","Likes to tackle", "Likes to play long balls"]
+    },
+    "Adam Wharton": {
+        "Strengths": [("Through balls", "Strong"), ("Taking set-pieces", "Strong"), ("Key passes", "Strong")],
+        "Weaknesses": [("Passing", "Weak")],
+        "Style": ["Likes to shoot from distance", "Likes to play long balls", "Plays the ball off the ground often", "Likes to tackle"]
+    },
+    "Carlos Baleba": {
+        "Strengths": [("Ball interception", "Very Strong"), ("Dribbling", "Strong"), ("Aerial Duels", "Strong")],
+        "Weaknesses": [],
+        "Style": ["Likes to shoot from distance", "Likes to dribble", "Likes to play long balls"]
+    },
+    "Elliot Anderson": {
+        "Strengths": [("Dribbling", "Very Strong"), ('Aerial Duels', "Strong"), ("Taking set-pieces", "Strong"), ("Tackling", "Strong")],
+        "Weaknesses": [],
+        "Style": ["Get fouled often", "Likes to dribble", "Likes to play long balls", "Likes to tackle", "Commits fouls often"]
+    },
+    "Angelo Stiller": {
+        "Strengths": [("Passing", "Very Strong"), ("Key passes", "Strong"), ("Through balls", "Strong"), ("Taking set-pieces", "Strong")],
+        "Weaknesses": [("Aerial Duels", "Weak")],
+        "Style": [("Plays the ball off the ground often")]
+    },
+    "Sandro Tonali": {
+        "Strengths": [("Concentration", "Strong"), ("Blocking the ball", "Strong")],
+        "Weaknesses": [("Aerial Duels", "Weak"), ("Tackling", "Weak")],
+        "Style": ["Likes to shoot from distance", "Does not dive into tackles"]
+    },
+    "André": {
+        "Strengths": [("Passing", "Strong"), ("Tackling", "Strong"), ("Ball interception", "Strong")],
+        "Weaknesses": [("Aerial Duels", "Weak")],
+        "Style": ["Likes to shoot from distance", "Likes to tackle"]
+    },
+    "Aurélien Tchouaméni": {
+        "Strengths": [("Aerial Duels", "Very Strong"), ("Passing", "Strong"), ("Ball interception", "Strong"), ("Concentration", "Strong"), ("Blocking the ball", "Strong")],
+        "Weaknesses": [],
+        "Style": ["Likes to play short passes"]
+    },
+    "Richard Ríos": {
+        "Strengths": [("Key passes", "Strong"), ("Through balls", "Strong")],
+        "Weaknesses": [],
+        "Style": ["Gets fouled often", "Likes to play long balls", "Likes to do layoffs", "Likes to dribble", "Commits fouls often"]
+    },
+    "Éderson": {
+        "Strengths": [("Passing", "Strong"), ("Aerial Duels", "Strong"), ("Concentration", "Strong")],
+        "Weaknesses": [],
+        "Style": ["Likes to play long balls"]
+    },
+}
+
+# Get the assessment for the selected player (defaulting to empty if not in our mock dict)
+assessment = scout_assessments.get(player_1, {"Strengths": [], "Weaknesses": [], "Style": []})
+
+col_str, col_weak, col_style = st.columns(3)
+
+with col_str:
+    st.markdown("#### Strengths")
+    if assessment["Strengths"]:
+        for trait, rating in assessment["Strengths"]:
+            # Green circle for strengths
+            st.markdown(f"🟢 **{trait}** &nbsp;—&nbsp; *{rating}*")
+    else:
+        st.write("Player has no significant strengths.")
+
+with col_weak:
+    st.markdown("#### Weaknesses")
+    if assessment["Weaknesses"]:
+        for trait, rating in assessment["Weaknesses"]:
+            # Red circle for weaknesses
+            st.markdown(f"🔴 **{trait}** &nbsp;—&nbsp; *{rating}*")
+    else:
+        st.write("Player has no significant weaknesses.")
+
+with col_style:
+    st.markdown("#### Style of Play")
+    if assessment["Style"]:
+        for style in assessment["Style"]:
+            # Blue diamond for playstyle
+            st.markdown(f"🔹 {style}")
+    else:
+        st.write("No significant style of play.")
 
     # --- CHARTS ---
-    st.write(f"### Visual Breakdown")
-    cols = st.columns(3)
+st.write(f"### Visual Breakdown")
+cols = st.columns(3)
 
-    for i, (stat, label) in enumerate(weights_labels.items()):
-        p1_val = pd.to_numeric(str(p1_data.get(stat, 0)).replace(',', '.'), errors='coerce')
-        p2_val = pd.to_numeric(str(p2_data.get(stat, 0)).replace(',', '.'), errors='coerce')
+for i, (stat, label) in enumerate(weights_labels.items()):
+    p1_val = pd.to_numeric(str(p1_data.get(stat, 0)).replace(',', '.'), errors='coerce')
+    p2_val = pd.to_numeric(str(p2_data.get(stat, 0)).replace(',', '.'), errors='coerce')
 
-        chart_df = pd.DataFrame({
-            "Player": [player_1, player_2],
-            "Value": [p1_val, p2_val]
-        })
+    chart_df = pd.DataFrame({
+        "Player": [player_1, player_2],
+        "Value": [p1_val, p2_val]
+    })
 
-        fig = px.bar(
-            chart_df, x="Value", y="Player", orientation='h',
-            color="Player",
-            color_discrete_map={player_1: "#003366", player_2: "#ADD8E6"},
-            height=150
-        )
+    fig = px.bar(
+        chart_df, x="Value", y="Player", orientation='h',
+        color="Player",
+        color_discrete_map={player_1: "#003366", player_2: "#ADD8E6"},
+        height=150
+    )
 
-        fig.update_layout(showlegend=False, margin=dict(l=0, r=0, t=30, b=0),
-                          xaxis_title=None, yaxis_title=None)
+    fig.update_layout(showlegend=False, margin=dict(l=0, r=0, t=30, b=0),
+                        xaxis_title=None, yaxis_title=None)
 
-        with cols[i % 3]:
-            st.write(f"**{label}**")
-            st.plotly_chart(fig, use_container_width=True)
+    with cols[i % 3]:
+        st.write(f"**{label}**")
+        st.plotly_chart(fig, use_container_width=True)
 
-    st.divider()
+st.divider()
 
-    # --- DETAILED STATS (With Deltas) ---
-    st.write(f"### The Numbers: {player_1} vs {player_2}")
-    st.info(f"The small green/red numbers show how much better or worse **{player_1}** is compared to **{player_2}**.")
+# --- DETAILED STATS (With Deltas) ---
+st.write(f"### The Numbers: {player_1} vs {player_2}")
+st.info(f"The small green/red numbers show how much better or worse **{player_1}** is compared to **{player_2}**.")
 
-    m1, m2, m3 = st.columns(3)
-    all_metric_cols = [m1, m2, m3]
+m1, m2, m3 = st.columns(3)
+all_metric_cols = [m1, m2, m3]
 
-    for i, (stat, label) in enumerate(weights_labels.items()):
-        p1_val = pd.to_numeric(str(p1_data.get(stat, 0)).replace(',', '.'), errors='coerce')
-        p2_val = pd.to_numeric(str(p2_data.get(stat, 0)).replace(',', '.'), errors='coerce')
+for i, (stat, label) in enumerate(weights_labels.items()):
+    p1_val = pd.to_numeric(str(p1_data.get(stat, 0)).replace(',', '.'), errors='coerce')
+    p2_val = pd.to_numeric(str(p2_data.get(stat, 0)).replace(',', '.'), errors='coerce')
 
-        # Calculate the difference for the Streamlit delta indicator
-        diff = p1_val - p2_val
+    # Calculate the difference for the Streamlit delta indicator
+    diff = p1_val - p2_val
 
-        all_metric_cols[i % 3].metric(
-            label=label,
-            value=f"{p1_val:.2f}",
-            delta=f"{diff:.2f}"
-        )
+    all_metric_cols[i % 3].metric(
+        label=label,
+        value=f"{p1_val:.2f}",
+        delta=f"{diff:.2f}"
+    )
+
+
 # ============================================================
 # SECTION 4 — VISUAL COMPARISON (RADAR CHART)
 # ============================================================
 st.divider()
 st.write(f"### 📊 Performance Radar: {player_1} vs {player_2}")
-st.caption(f"Showing percentile rankings. The outer edge (100) represents the best in the scouting pool.")
+st.caption(f"Showing percentile rankings (using Casemiro as the baseline standard). The outer edge (100) represents the best in the scouting pool.")
 
 # 1. Define the stats for the radar
 radar_stats = list(weights_labels.keys())
@@ -309,8 +403,8 @@ with col_chart1:
 # SECTION 6 — TRANSFER TARGETS LEADERBOARD 2: Man Utd Fit
 # ============================================================
 st.divider()
-st.subheader("🔴 Transfer Targets — Leaderboard 2: Best Fit for Man Utd (70% Weights + 30% Similarity)")
-st.write("Ranking players based on the **Stat Weights** you selected in the sidebar.")
+st.subheader("🔴 Transfer Targets — Leaderboard 2: Best Fit for Man Utd ")
+st.write("Ranking players based on the **Stat Weights** or the preset you selected in the sidebar.")
 
 
 def calculate_mu_score(df, weights_dict):
@@ -337,9 +431,7 @@ scouts['mu_score_norm'] = (scouts['mu_weighted_score'] - w_min) / (w_max - w_min
 
 # 3. Apply the 70/30 Ratio Blend
 # (70% Weighted Score + 30% Similarity Score)
-scouts['mu_final_score'] = (
-        (scouts['mu_score_norm'] * 0.7) + (scouts['casemiro_similarity'] * 0.3)
-).round(4)
+scouts['mu_final_score'] = scouts['mu_score_norm'].round(4)
 
 # 4. Create the Leaderboard DataFrame
 leaderboard_mu = scouts[['Player', 'Age', 'Comp', 'mu_weighted_score', 'casemiro_similarity', 'mu_final_score']] \
@@ -356,14 +448,14 @@ with col_lb2:
 
 with col_chart2:
     # Get top 10 for the chart and sort ascending for horizontal bar flow
-    mu_chart_data = leaderboard_mu.head(11).sort_values(by='Final Score', ascending=True)
+    mu_chart_data = leaderboard_mu.head(10).sort_values(by='Final Score', ascending=True)
 
     fig_mu = px.bar(
         mu_chart_data,
         x='Final Score',
         y='Player',
         orientation='h',
-        title='Best Fit (70% Weights / 30% Similarity)',
+        title='Best Fit',
         labels={'Final Score': 'Blended Final Score', 'Player': ''},
         color='Final Score',
         color_continuous_scale='Reds',
@@ -403,5 +495,3 @@ fig_scatter.update_traces(textposition='top center', marker=dict(size=10, color=
 fig_scatter.update_layout(height=600)
 
 st.plotly_chart(fig_scatter, use_container_width=True)
-
-st.caption("Top right = high fit + high similarity to Casemiro — ideal targets")
