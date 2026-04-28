@@ -481,11 +481,11 @@ col_lb2, col_chart2 = st.columns([1, 1])
 
 with col_lb2:
     st.write("**Top Rankings**")
-    st.dataframe(leaderboard_mu.head(11), use_container_width=True, height=385)
+    st.dataframe(leaderboard_mu.head(15), use_container_width=True, height=385)
 
 with col_chart2:
     # Get top 10 for the chart and sort ascending for horizontal bar flow
-    mu_chart_data = leaderboard_mu.head(10).sort_values(by='Final Score', ascending=True)
+    mu_chart_data = leaderboard_mu.head(15).sort_values(by='Final Score', ascending=True)
 
     fig_mu = px.bar(
         mu_chart_data,
