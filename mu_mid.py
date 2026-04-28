@@ -7,13 +7,13 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 st.set_page_config(
-    page_title="MU Scouting — Casemiro Replacement",
+    page_title="Man Utd's midfield scouting",
     page_icon="⚽",
     layout="wide"
 )
 
 st.title("⚽ CT's Scouting Dashboard")
-st.subheader("WHO CAN REPLACE CASEMIRO? — Transfer Targets Analysis 2025-26(based on rumours)")
+st.subheader("A statistical look on the potential targets (based on their 2025-26 stat in the domestic league)")
 
 
 
@@ -40,56 +40,57 @@ scouts = load_scouts()
 st.sidebar.header("⚖️ Stat Weights")
 st.sidebar.write("Adjust how much each stat matters:")
 
-# 1. Define the Preset Values
+# 1. Updated Preset Values with Volume & Progression
 PRESETS = {
     "Custom (Manual)": None,
     "The Destroyer (#6)": {
-        "Tackles": 5.0, "Blocks": 4.0, "Duels": 4.5, "Interceptions": 5.0, "Recoveries": 4.5, "Aerials": 4.0, "Retention": 3.0, "PassPct": 3.5, "KeyPass": 1.0
+        "Tackles": 5.0, "Blocks": 4.0, "Duels": 4.5, "Interceptions": 5.0, "Recoveries": 4.5, "Aerials": 4.0, "Retention": 3.0, "PassPct": 3.5, "KeyPass": 1.0,
+        "ProgCarries": 2.0, "TotalDuels": 5.0, "AccuratePasses": 3.5, "FinalThird": 2.5
     },
     "Box-to-Box Engine (#8)": {
-        "Tackles": 3.5, "Blocks": 2.5, "Duels": 3.5, "Interceptions": 3.0, "Recoveries": 5.0, "Aerials": 3.0, "Retention": 4.5, "PassPct": 4.0, "KeyPass": 3.0
+        "Tackles": 3.5, "Blocks": 2.5, "Duels": 3.5, "Interceptions": 3.0, "Recoveries": 5.0, "Aerials": 3.0, "Retention": 4.5, "PassPct": 4.0, "KeyPass": 3.0,
+        "ProgCarries": 4.5, "TotalDuels": 4.5, "AccuratePasses": 4.0, "FinalThird": 4.0
     },
     "Deep-Lying Playmaker": {
-        "Tackles": 2.5, "Blocks": 1.5, "Duels": 2.5, "Interceptions": 3.0, "Recoveries": 3.0, "Aerials": 2.0, "Retention": 5.0, "PassPct": 5.0, "KeyPass": 5.0
+        "Tackles": 2.5, "Blocks": 1.5, "Duels": 2.5, "Interceptions": 3.0, "Recoveries": 3.0, "Aerials": 2.0, "Retention": 5.0, "PassPct": 5.0, "KeyPass": 5.0,
+        "ProgCarries": 3.5, "TotalDuels": 2.5, "AccuratePasses": 5.0, "FinalThird": 5.0
     },
     "The Casemiro": {
-        "Tackles": 4.5, "Blocks": 3.5, "Duels": 4.0, "Interceptions": 4.5, "Recoveries": 4.0, "Aerials": 4.5, "Retention": 3.0, "PassPct": 3.0, "KeyPass": 2.5
+        "Tackles": 4.5, "Blocks": 3.5, "Duels": 4.0, "Interceptions": 4.5, "Recoveries": 4.0, "Aerials": 4.5, "Retention": 3.0, "PassPct": 3.0, "KeyPass": 2.5,
+        "ProgCarries": 2.5, "TotalDuels": 5.0, "AccuratePasses": 3.5, "FinalThird": 3.5
     }
 }
 
-# 2. Preset Selection Box
 preset_choice = st.sidebar.selectbox("🎯 Select Tactical Profile:", list(PRESETS.keys()))
 
-# 3. Initialize slider values in session state if they don't exist
+# 2. Initialize new stats in session state
 if 'sliders' not in st.session_state:
     st.session_state.sliders = {
         "Tackles": 4.0, "Blocks": 3.0, "Duels": 4.5, "Interceptions": 4.0,
-        "Recoveries": 5.0, "Aerials": 3.0, "Retention": 5.0, "PassPct": 4.0, "KeyPass": 4.0
+        "Recoveries": 5.0, "Aerials": 3.0, "Retention": 5.0, "PassPct": 4.0, "KeyPass": 4.0,
+        "ProgCarries": 3.0, "TotalDuels": 4.0, "AccuratePasses": 4.0, "FinalThird": 3.5
     }
 
-# 4. Update session state values if a preset is chosen
 if preset_choice != "Custom (Manual)":
     for stat, val in PRESETS[preset_choice].items():
         st.session_state.sliders[stat] = val
 
-# 5. Helper function to handle manual slider changes
-def update_slider(key):
-    # This flips the selectbox back to "Custom" if you move a slider manually
-    # (Optional, but keeps the UI clean)
-    pass
-
-# 6. Create the Sliders
+# 3. Create the Sliders (Added the 4 new ones at the bottom)
 w_tackles = st.sidebar.slider("Tackles Won", 1.0, 5.0, st.session_state.sliders["Tackles"], 0.5)
 w_blocks = st.sidebar.slider("Blocks", 1.0, 5.0, st.session_state.sliders["Blocks"], 0.5)
-w_duels = st.sidebar.slider("Ground Duels %", 1.0, 5.0, st.session_state.sliders["Duels"], 0.5)
+w_duels = st.sidebar.slider("Ground Duels Win %", 1.0, 5.0, st.session_state.sliders["Duels"], 0.5)
 w_interceptions = st.sidebar.slider("Interceptions", 1.0, 5.0, st.session_state.sliders["Interceptions"], 0.5)
 w_recoveries = st.sidebar.slider("Ball Recoveries", 1.0, 5.0, st.session_state.sliders["Recoveries"], 0.5)
-w_aerials = st.sidebar.slider("Aerial Duels %", 1.0, 5.0, st.session_state.sliders["Aerials"], 0.5)
+w_aerials = st.sidebar.slider("Aerial Duels Win %", 1.0, 5.0, st.session_state.sliders["Aerials"], 0.5)
 w_carries = st.sidebar.slider("Ball Retention", 1.0, 5.0, st.session_state.sliders["Retention"], 0.5)
 w_pass_pct = st.sidebar.slider("Pass Percentage", 1.0, 5.0, st.session_state.sliders["PassPct"], 0.5)
 w_keypass = st.sidebar.slider("Key Passes", 1.0, 5.0, st.session_state.sliders["KeyPass"], 0.5)
+w_prog_carries = st.sidebar.slider("Progressive Carries", 1.0, 5.0, st.session_state.sliders["ProgCarries"], 0.5)
+w_total_duels = st.sidebar.slider("Total Duels Won (Vol)", 1.0, 5.0, st.session_state.sliders["TotalDuels"], 0.5)
+w_acc_passes = st.sidebar.slider("Accurate Passes (Vol)", 1.0, 5.0, st.session_state.sliders["AccuratePasses"], 0.5)
+w_final_third = st.sidebar.slider("Final Third Passes", 1.0, 5.0, st.session_state.sliders["FinalThird"], 0.5)
 
-# Keep your weight dictionaries as they were
+# 4. Map to CSV Columns
 not_weights = {
     'Tackle_90': w_tackles,
     'Blk_90': w_blocks,
@@ -99,7 +100,11 @@ not_weights = {
     'KeyPass_90': w_keypass,
     'Pass%': w_pass_pct,
     'Aerial_90': w_aerials,
-    'Ball_Retention': w_carries
+    'Ball_Retention': w_carries,
+    'ProC_90': w_prog_carries,
+    'Total_duel_90': w_total_duels,
+    'accurate_passes_90': w_acc_passes,
+    'pass_into_finalthird_90 ': w_final_third # Note the space if present in your CSV header
 }
 
 weights_labels = {
@@ -112,6 +117,10 @@ weights_labels = {
     'Pass%': "Passing %",
     'Aerial_90': "Aerial Win %",
     'Ball_Retention': "Ball Retention Ratio",
+    'ProC_90': "Progressive Carries per game",
+    'Total_duel_90': "Total Duels Won per game",
+    'accurate_passes_90': "Accurate Passes per game",
+    'pass_into_finalthird_90 ': "Passes into Final Third per game"
 }
 # ============================================================
 # SECTION 3 — HEAD-TO-HEAD PLAYER COMPARISON
@@ -320,20 +329,20 @@ for i, (stat, label) in enumerate(weights_labels.items()):
 # ============================================================
 st.divider()
 st.write(f"### 📊 Performance Radar: {player_1} vs {player_2}")
-st.caption(f"Showing percentile rankings (using Casemiro as the baseline standard). The outer edge (100) represents the best in the scouting pool.")
+st.caption(f"Showing percentile rankings. The outer edge (100) represents the best in the scouting pool.")
 
-# 1. Define the stats for the radar
+# 1. Define the stats for the radar (Now 13 stats)
 radar_stats = list(weights_labels.keys())
 radar_labels = [
-    "Tackles", "Blocks", "Ground Duels", "Interceptions",
-    "Recoveries", "Key Passes", "Pass %", "Aerial Duels", "Retention"
+    "Tackles", "Blocks", "Ground Duels Win%", "Interceptions",
+    "Recoveries", "Key Passes", "Pass %", "Aerial Duels Win %", "Retention",
+    "Prog. Carries", "Total Duels", "Accurate Passes", "Pass into Final Third"
 ]
 
 # 2. Calculate Percentiles relative to the whole dataset
-# This turns raw numbers into a 0-100 score based on your CSV
 scouts_pct = scouts.copy()
 for stat in radar_stats:
-    # Handle cleaning just in case
+    # Clean data (handle spaces or strings)
     scouts_pct[stat] = pd.to_numeric(scouts_pct[stat].astype(str).str.replace(',', '.'), errors='coerce').fillna(0)
     # Rank them 0 to 100
     scouts_pct[stat] = (scouts_pct[stat].rank(pct=True) * 100).round(1)
@@ -342,7 +351,7 @@ for stat in radar_stats:
 p1_values = scouts_pct[scouts_pct['Player'] == player_1][radar_stats].values.flatten().tolist()
 p2_values = scouts_pct[scouts_pct['Player'] == player_2][radar_stats].values.flatten().tolist()
 
-# 4. "Close" the radar loop (Plotly needs the first value repeated at the end)
+# 4. "Close" the radar loop
 p1_values += p1_values[:1]
 p2_values += p2_values[:1]
 radar_labels_closed = radar_labels + [radar_labels[0]]
@@ -377,7 +386,7 @@ fig_radar.update_layout(
         radialaxis=dict(
             visible=True,
             range=[0, 100],
-            tickfont=dict(size=10)
+            tickfont=dict(size=10, color="black")
         ),
         angularaxis=dict(
             tickfont=dict(size=12, color="white")
@@ -401,13 +410,17 @@ st.caption("Based on cosine similarity of defensive & passing profile vs Casemir
 target_sim_cols = [
     'Tackle_90', 'Blk_90', 'Ground_duel_90', 'Ball_Retention',
     'Interception_90', 'Recovery_90', 'KeyPass_90',
-    'Aerial_90', 'Possesion_lost_90', 'Pass%',
+    'Aerial_90', 'Possesion_lost_90', 'Pass%', 'ProC_90','Total_duel_90', 'accurate_passes_90',
+    'pass_into_finalthird_90 '
 ]
 
-scouts[target_sim_cols] = scouts[target_sim_cols].apply(pd.to_numeric, errors='coerce').fillna(0)
+scouts_sim_norm = scouts[target_sim_cols].apply(pd.to_numeric, errors='coerce').fillna(0)
+scouts_sim_norm = scouts_sim_norm.rank(pct=True) # Convert everything to 0-1 scale
 
-casemiro_scout_vector = scouts[scouts['Player'] == 'Casemiro'][target_sim_cols].values
-all_scout_vectors = scouts[target_sim_cols].values
+casemiro_scout_vector = scouts_sim_norm[scouts['Player'] == 'Casemiro'].values
+all_scout_vectors = scouts_sim_norm.values
+
+# Calculate Similarity
 scout_similarity = cosine_similarity(casemiro_scout_vector, all_scout_vectors)[0]
 scouts['casemiro_similarity'] = scout_similarity.round(4)
 
@@ -440,7 +453,7 @@ with col_chart1:
 # SECTION 6 — TRANSFER TARGETS LEADERBOARD 2: Man Utd Fit
 # ============================================================
 st.divider()
-st.subheader("🔴 Transfer Targets — Leaderboard 2: Best Fit for Man Utd ")
+st.subheader("🔴 Transfer Targets — Leaderboard 2: Best Fit based on Desired Qualities  ")
 st.write("Ranking players based on the **Stat Weights** or the tactical profile you selected in the sidebar.")
 
 
@@ -450,11 +463,12 @@ def calculate_mu_score(df, weights_dict):
         if stat in df.columns:
             # Clean data and handle string/numeric conversion
             col_data = pd.to_numeric(df[stat].astype(str).str.replace(',', '.'), errors='coerce').fillna(0)
-            stat_min = col_data.min()
-            stat_max = col_data.max()
-            if stat_max > stat_min:
-                normalized_stat = (col_data - stat_min) / (stat_max - stat_min)
-                score += (normalized_stat * weight)
+            # --- NEW LOGIC: Percentile Rank ---
+            # This gives the best player a 1.0 and the worst a 0.0
+            # but normalizes the 'gap' between players.
+            normalized_stat = col_data.rank(pct=True).fillna(0.5)
+
+            score += (normalized_stat * weight)
     return score
 
 
