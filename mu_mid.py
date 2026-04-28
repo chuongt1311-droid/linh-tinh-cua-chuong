@@ -40,30 +40,68 @@ scouts = load_scouts()
 st.sidebar.header("⚖️ Stat Weights")
 st.sidebar.write("Adjust how much each stat matters:")
 
-w_tackles       = st.sidebar.slider("Tackles Won",              0.0, 5.0, 4.0, 0.5)
-w_blocks        = st.sidebar.slider("Blocks",                   0.0, 5.0, 3.0, 0.5)
-w_duels         = st.sidebar.slider("Ground Duels %",           0.0, 5.0, 4.5, 0.5)
-w_interceptions = st.sidebar.slider("Interceptions",            0.0, 5.0, 4.0, 0.5)
-w_recoveries    = st.sidebar.slider("Ball Recoveries",          0.0, 5.0, 5.0, 0.5)
-w_aerials       = st.sidebar.slider("Aerial Duels %",           0.0, 5.0, 3.0, 0.5)
-w_carries       = st.sidebar.slider("Ball Retention",           0.0, 5.0, 5.0, 0.5)
-w_pass_pct      = st.sidebar.slider("Pass Percentage",          0.0, 5.0, 4.0, 0.5)
-w_keypass       = st.sidebar.slider("Key Passes",               0.0, 5.0, 4.0, 0.5)
-
-not_weights = {
-    'Tackle_90'         : w_tackles,
-    'Blk_90'            : w_blocks,
-    'Ground_duel_90'    : w_duels,
-    'Interception_90'   : w_interceptions,
-    'Recovery_90'       : w_recoveries,
-    'KeyPass_90'        : w_keypass,
-    'Pass%'             : w_pass_pct,
-    'Aerial_90'         : w_aerials,
-    'Ball_Retention'    : w_carries
-
+# 1. Define the Preset Values
+PRESETS = {
+    "Custom (Manual)": None,
+    "The Destroyer (#6)": {
+        "Tackles": 5.0, "Blocks": 4.0, "Duels": 4.5, "Interceptions": 5.0, "Recoveries": 4.5, "Aerials": 4.0, "Retention": 3.0, "PassPct": 3.5, "KeyPass": 1.0
+    },
+    "Box-to-Box Engine (#8)": {
+        "Tackles": 3.5, "Blocks": 2.5, "Duels": 3.5, "Interceptions": 3.0, "Recoveries": 5.0, "Aerials": 3.0, "Retention": 4.5, "PassPct": 4.0, "KeyPass": 3.0
+    },
+    "Deep-Lying Playmaker": {
+        "Tackles": 2.5, "Blocks": 1.5, "Duels": 2.5, "Interceptions": 3.0, "Recoveries": 3.0, "Aerials": 2.0, "Retention": 5.0, "PassPct": 5.0, "KeyPass": 5.0
+    },
+    "The Casemiro": {
+        "Tackles": 4.5, "Blocks": 3.5, "Duels": 4.0, "Interceptions": 4.5, "Recoveries": 4.0, "Aerials": 4.5, "Retention": 3.0, "PassPct": 3.0, "KeyPass": 2.5
+    }
 }
 
-# 🛠️ FIX 1: Updated to match EXACT columns in mid_scouting.csv
+# 2. Preset Selection Box
+preset_choice = st.sidebar.selectbox("🎯 Select Tactical Profile:", list(PRESETS.keys()))
+
+# 3. Initialize slider values in session state if they don't exist
+if 'sliders' not in st.session_state:
+    st.session_state.sliders = {
+        "Tackles": 4.0, "Blocks": 3.0, "Duels": 4.5, "Interceptions": 4.0,
+        "Recoveries": 5.0, "Aerials": 3.0, "Retention": 5.0, "PassPct": 4.0, "KeyPass": 4.0
+    }
+
+# 4. Update session state values if a preset is chosen
+if preset_choice != "Custom (Manual)":
+    for stat, val in PRESETS[preset_choice].items():
+        st.session_state.sliders[stat] = val
+
+# 5. Helper function to handle manual slider changes
+def update_slider(key):
+    # This flips the selectbox back to "Custom" if you move a slider manually
+    # (Optional, but keeps the UI clean)
+    pass
+
+# 6. Create the Sliders
+w_tackles = st.sidebar.slider("Tackles Won", 1.0, 5.0, st.session_state.sliders["Tackles"], 0.5)
+w_blocks = st.sidebar.slider("Blocks", 1.0, 5.0, st.session_state.sliders["Blocks"], 0.5)
+w_duels = st.sidebar.slider("Ground Duels %", 1.0, 5.0, st.session_state.sliders["Duels"], 0.5)
+w_interceptions = st.sidebar.slider("Interceptions", 1.0, 5.0, st.session_state.sliders["Interceptions"], 0.5)
+w_recoveries = st.sidebar.slider("Ball Recoveries", 1.0, 5.0, st.session_state.sliders["Recoveries"], 0.5)
+w_aerials = st.sidebar.slider("Aerial Duels %", 1.0, 5.0, st.session_state.sliders["Aerials"], 0.5)
+w_carries = st.sidebar.slider("Ball Retention", 1.0, 5.0, st.session_state.sliders["Retention"], 0.5)
+w_pass_pct = st.sidebar.slider("Pass Percentage", 1.0, 5.0, st.session_state.sliders["PassPct"], 0.5)
+w_keypass = st.sidebar.slider("Key Passes", 1.0, 5.0, st.session_state.sliders["KeyPass"], 0.5)
+
+# Keep your weight dictionaries as they were
+not_weights = {
+    'Tackle_90': w_tackles,
+    'Blk_90': w_blocks,
+    'Ground_duel_90': w_duels,
+    'Interception_90': w_interceptions,
+    'Recovery_90': w_recoveries,
+    'KeyPass_90': w_keypass,
+    'Pass%': w_pass_pct,
+    'Aerial_90': w_aerials,
+    'Ball_Retention': w_carries
+}
+
 weights_labels = {
     'Tackle_90': "Tackles Won per 90",
     'Blk_90': "Blocks per 90",
@@ -73,9 +111,8 @@ weights_labels = {
     'KeyPass_90': "Key Passes per 90",
     'Pass%': "Passing %",
     'Aerial_90': "Aerial Win %",
-    'Ball_Retention': "Ball Retention Ratio (Touches per game/Possession lost per game)",
+    'Ball_Retention': "Ball Retention Ratio",
 }
-
 # ============================================================
 # SECTION 3 — HEAD-TO-HEAD PLAYER COMPARISON
 # ============================================================
@@ -404,7 +441,7 @@ with col_chart1:
 # ============================================================
 st.divider()
 st.subheader("🔴 Transfer Targets — Leaderboard 2: Best Fit for Man Utd ")
-st.write("Ranking players based on the **Stat Weights** or the preset you selected in the sidebar.")
+st.write("Ranking players based on the **Stat Weights** or the tactical profile you selected in the sidebar.")
 
 
 def calculate_mu_score(df, weights_dict):
