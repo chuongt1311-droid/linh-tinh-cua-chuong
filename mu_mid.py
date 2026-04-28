@@ -468,7 +468,7 @@ scouts['mu_score_norm'] = (scouts['mu_weighted_score'] - w_min) / (w_max - w_min
 
 # 3. Apply the 70/30 Ratio Blend
 # (70% Weighted Score + 30% Similarity Score)
-scouts['mu_final_score'] = scouts['mu_score_norm'].round(4)
+scouts['mu_final_score'] = scouts['mu_weighted_score'].round(4)
 
 # 4. Create the Leaderboard DataFrame
 leaderboard_mu = scouts[['Player', 'Age', 'Comp', 'mu_weighted_score', 'casemiro_similarity', 'mu_final_score']] \
