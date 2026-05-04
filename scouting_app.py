@@ -1559,7 +1559,7 @@ def make_radar(cat_scores):
     return fig
 
 
-from scipy.spatial.distance import cdist
+
 
 
 def get_similar_players(df_data, target_player_name, base_features, n=8,
