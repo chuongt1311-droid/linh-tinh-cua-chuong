@@ -1406,7 +1406,7 @@ def build_cohort_df(scouts: pd.DataFrame, player_row: pd.Series, cohort_key: str
         df = df.drop(columns=["_age"])
 
     elif cohort_key == "regulars":
-        df = df[df["Playing Time_Min"] >= 1500]
+        df = df[df["minutesPlayed"] >= 1500]
 
     # Always re-include the focal player (avoid empty / missing target)
     target_name = player_row["player"]
@@ -1714,8 +1714,8 @@ if page == "leaderboards":
             age_range = st.slider(t("filter_age_range"), min_age, max_age, (min_age, max_age), key="lb_age")
 
         with f3:
-            min_min  = int(df_pct['Playing Time_Min'].min())
-            max_min  = int(df_pct['Playing Time_Min'].max())
+            min_min  = int(df_pct['minutesPlayed'].min())
+            max_min  = int(df_pct['minutesPlayed'].max())
             min_mins = st.slider(t("filter_min_mins"), min_min, max_min, 900, 90, key="lb_mins")
 
     # ── APPLY FILTERS ─────────────────────────────────────────────────────────
