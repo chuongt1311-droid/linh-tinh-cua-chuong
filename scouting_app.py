@@ -917,7 +917,7 @@ TXT = {
 
         # League pressing-strength adjustment toggle
         "league_adj_label":  "League pressing adjustment",
-        "league_adj_help":   "Scales defensive volume stats (tackles, interceptions, recoveries, presses, blocks, total duels) by each league's average so pressing-heavy leagues like Bundesliga don't get an unfair boost vs possession-heavy ones like La Liga. Efficiency rates (Tackle Win %, etc.) are unaffected. Off by default; flip on for cross-league fairness.",
+        "league_adj_help":   "Scales defensive volume stats (tackles, interceptions, recoveries, presses, blocks, total duels) by each league's average so pressing-heavy leagues don't get an unfair boost vs possession-heavy ones like. Efficiency rates (Tackle Win %, etc.) are unaffected. Off by default; flip on for cross-league fairness.",
         "league_adj_active": "League-adjusted view",
     },
     "vi": {
@@ -1014,7 +1014,7 @@ TXT = {
         "cohort_age_bracket": "Cùng nhóm tuổi (±2 năm)",
 
         "league_adj_label":  "Điều chỉnh pressing theo giải",
-        "league_adj_help":   "Cân chỉnh các chỉ số phòng ngự *về số lượng* (tắc bóng, cắt bóng, thu hồi, đoạt bóng, cản phá, tranh chấp) theo trung bình của từng giải để giải pressing mạnh như Bundesliga không được lợi thế bất công so với giải kiểm soát bóng như La Liga. Các tỷ lệ hiệu quả (Tỷ lệ thắng tắc bóng, v.v.) không bị ảnh hưởng. Mặc định tắt; bật khi cần so sánh công bằng giữa các giải.",
+        "league_adj_help":   "Cân chỉnh các chỉ số phòng ngự *về số lượng* (tắc bóng, cắt bóng, thu hồi, đoạt bóng, cản phá, tranh chấp) theo trung bình của từng giải để giải chuyên pressing mạnh không có lợi thế bất công so với giải chuyên kiểm soát bóng. Các tỷ lệ hiệu quả (Tỷ lệ thắng tắc bóng, v.v.) không bị ảnh hưởng. Mặc định tắt; bật khi cần so sánh công bằng giữa các giải.",
         "league_adj_active": "Đã điều chỉnh giải",
     },
 }
