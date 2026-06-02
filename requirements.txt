@@ -1,6 +1,9 @@
 streamlit
 pandas
 plotly
-matplotlib
 numpy
+requests
+pathlib
+matplotlib
+pybaseball
 scikit-learn
