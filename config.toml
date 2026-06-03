@@ -1,0 +1,9 @@
+# Forces dark mode regardless of the viewer's browser setting. The dashboard's
+# custom HTML cards and Plotly charts hardcode dark backgrounds (#0e1117), so
+# without this the page chrome could render light and look broken.
+[theme]
+base = "dark"
+backgroundColor = "#0e1117"
+secondaryBackgroundColor = "#161b22"
+textColor = "#e6e6e6"
+primaryColor = "#dc2626"
