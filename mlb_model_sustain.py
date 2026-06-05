@@ -68,7 +68,6 @@ import numpy as np
 import requests
 import plotly.graph_objects as go
 from pathlib import Path
-import duckdb
 from pybaseball import statcast, spraychart
 
 # Gaussian smoothing for the zone heatmaps. scipy is optional; if it's missing
