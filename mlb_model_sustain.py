@@ -68,6 +68,7 @@ import numpy as np
 import requests
 import plotly.graph_objects as go
 from pathlib import Path
+import duckdb
 from pybaseball import statcast, spraychart
 
 # Gaussian smoothing for the zone heatmaps. scipy is optional; if it's missing
@@ -101,8 +102,14 @@ def pitches_path(year):
 # regenerates a parquet, mtime changes → cache key changes → cache miss → fresh
 # load. No need to manually clear the cache anymore.
 #
-# The argument is prefixed with `_` so Streamlit doesn't try to hash it as
-# a real data argument (it just uses it for the key).
+# CRITICAL: the `mtime` argument MUST NOT start with an underscore. In
+# @st.cache_data, any argument prefixed with `_` is DELIBERATELY EXCLUDED from
+# the cache key (Streamlit's mechanism for passing unhashable objects like DB
+# connections). If we named it `_mtime`, the file's modification time would be
+# ignored, the cache key would never change, and the loader would serve ONE
+# result forever — even after you push fresh parquets. Named `mtime` (a plain
+# hashable float), it becomes part of the key: when the file changes, mtime
+# changes, the key changes, and the cache reloads the new data.
 # ═══════════════════════════════════════════════════════════════════════════════
 def _file_mtime(path):
     """Returns the file's last-modified time, or None if missing."""
@@ -112,31 +119,32 @@ def _file_mtime(path):
         return None
 
 @st.cache_data
-def load_comparison(_mtime):
+def load_comparison(mtime):
     return pd.read_parquet(COMPARISON_PATH)
 
 @st.cache_data
-def load_history(_mtime):
+def load_history(mtime):
     return pd.read_parquet(HISTORY_PATH)
 
 @st.cache_data
-def load_rolling(_mtime):
+def load_rolling(mtime):
     try:
         return pd.read_parquet(ROLLING_PATH)
     except (FileNotFoundError, OSError):
         return pd.DataFrame(columns=['batter', 'game_date', 'rolling_xwOBA'])
 
 @st.cache_data
-def load_pitches(year, _mtime):
-    """Slim pitch-level data for ONE season (heatmaps + spray). Cached per year,
-    so switching the season dropdown loads that year once then reuses it."""
+def load_pitches(year, mtime):
+    """Slim pitch-level data for ONE season (heatmaps + spray). Cached per
+    (year, mtime), so switching the season dropdown loads that year once, and a
+    fresh parquet (new mtime) busts the cache."""
     try:
         return pd.read_parquet(pitches_path(year))
     except (FileNotFoundError, OSError):
         return pd.DataFrame()
 
 @st.cache_data
-def load_pitchmix(_mtime):
+def load_pitchmix(mtime):
     try:
         return pd.read_parquet(PITCHMIX_PATH)
     except (FileNotFoundError, OSError):
@@ -157,7 +165,7 @@ def load_pitchmix(_mtime):
 # average as much as Trout with 300.
 # ═══════════════════════════════════════════════════════════════════════════════
 @st.cache_data
-def compute_league_refs(_mtime):
+def compute_league_refs(mtime):
     h = pd.read_parquet(HISTORY_PATH)
     pool = h[(h['season'].isin([2024, 2025])) & (h.get('qualified', 1) == 1)]
     refs = {'hit_type': {}, 'pitch_xwoba': {}}
